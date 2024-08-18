@@ -1,0 +1,246 @@
+// If the generic classes and interfaces seem too complex, just write a code
+// that works with concrete classes and int or Integer keys and values.
+//
+// Some languages do not require to specify variable/function types but you 
+// shall specify types (or hints) if possible.
+//
+// If the language requires it, use int where plain number is enough and use 
+// a pointer to int or Integer type where the value can be a number or the null. 
+//
+// Use const or final instead of constant keyword if the language supports it. Otherwise 
+// diregard (omit) it.
+//
+// & and * in variable definitions are C++ specific hints. Disregard them
+// if using other languages.
+//
+// In value1 EQUAL value2, you must use language specific comparison that compares
+// values data, not just references. For example, in the case of Java Integer type,
+// value1 == value2 compares two references and so cannot be used.
+//
+// Some languages do not have null keyword and so you need to replace it appropriately.
+// For example, use nullptr in C++.
+//
+// Some languages have vectors. If not, replace vector with an appropriate array type.
+//
+// INPUT_STREAM and OUTPUT_STREAM are to be replaced with language specific
+// input/output streams. Replace stdout with a stream corresponding the standard
+// output (usually your terminal or console).
+//
+// stream << expression means write the expression value as text to the stream.
+// stream >> variable means read from the stream, convert from text, and assign to 
+// the variable. Replace << and >> with appropriate language constructs. 
+
+class Driver
+
+	constant int tableSize    = 191	// hash tables size
+	constant int doubleFactor = 181	// factor R to be used in double hashing
+
+	OUTPUT_STREAM	fout		// declare and create an output stream
+	vector<Integer>	data		// all keys from the input file
+
+	void testKeyValue ( 
+
+		string&				 description
+		HashInterface<Integer,Integer>&	 hashTable
+		constant Integer		 key
+		constant Integer		 value	
+	)
+		constant int previousCollisions = hashTable.getCollisions()
+
+		hashTable.put(key,value)
+
+		constant Integer*  retrievedValue = hashTable.get(key)
+		constant string&   retrievedText  = retrievedValue != null ? toString(*retrievedValue) : "null"
+
+		fout << key << " : " << value << " -> " << retrievedText   
+                     << ", collisions " << (hashTable.getCollisions()-previousCollisions) << "\n"
+		
+		if ( retrievedValue == null || ! ( *retrievedValue EQUAL value )  ) 
+			fout << "Retrieved value " << retrievedText << " does not match stored value " << value
+                             << " for key " << key << "\n" 	
+			throw runtime_error("value mismatch")
+
+	void testInputKey (
+
+		constant Integer  	          key
+		HashInterface<Integer,Integer>&	  lph
+		HashInterface<Integer,Integer>&	  qph
+		HashInterface<Integer,Integer>&	  dhph
+	)	
+		constant Integer  value = key*2
+		
+		testKeyValue( "Linear   ", lph,  key, value ) 
+		testKeyValue( "Quadratic", qph,  key, value ) 
+		testKeyValue( "Double   ", dhph, key, value )
+
+		fout << "\n"
+
+	void testData (
+	
+		constant string& description
+	)
+		fout << "*** " << description << " Start *** " << "\n\n"
+ 	
+		LinearProbingHash<Integer,Integer>        lph  ( tableSize )
+		QuadraticProbingHash<Integer,Integer>     qph  ( tableSize )
+		DoubleHashingProbingHash<Integer,Integer> dhph ( tableSize, doubleFactor ) 
+
+		for ( variable key : data ) testInputKey(key,lph,qph,dhph)	
+
+		fout << "Linear    " << lph.getCollisions()  << " collisions\n"
+                lph.printTable()
+
+		fout << "Quadratic " << qph.getCollisions()  << " collisions\n"
+                qph.printTable()
+
+		fout << "Double    " << dhph.getCollisions() << " collisions\n"
+                dhph.printTable()
+
+		fout << "\n*** " << description << " End *** " << "\n\n"
+		
+	void readData  ( 
+		constant string&  inputFile
+	)
+		INPUT_STREAM  fin(inputFile)		
+		Integer       key
+
+		while ( fin >> key ) data.push_back(key)
+
+		fin.close()
+
+	void testFile (
+
+		constant string&	inputFilename
+		constant string&	outputFilename1
+                constant string&	outputFilename2
+	)
+		stdout << "Input file " << inputFilename << ", output file " << outputFilename << "\n"
+
+		readData ( inputFilename  )
+		fout.open( outputFilename1 )
+                fout2.open( outputFilename2 )
+
+		testData( "Random Order" )
+
+		SORT_IN_ASCENDING_ORDER( data )   // replace with appropriate actual code
+		testData( "Ascending Order" )
+
+		SORT_IN_DESCENDING_ORDER( data )  // replace with appropriate actual code
+		testData( "Descending Order" )
+
+		fout.close()
+
+		stdout << "Done\n"
+
+	void main()
+
+		try
+               
+	          testFile( "in150.txt", "out150_collisions.txt","out150_tables.txt )
+                  testFile( "in160.txt", "out160_collisions.txt","out160_tables.txt )
+                  testFile( "in170.txt", "out170_collisions.txt","out170_tables.txt )
+                  testFile( "in180.txt", "out180_collisions.txt","out180_tables.txt )
+
+		catch ( constant exception& ex )
+
+			stdout << "Exception: << ex.whatMessage() << "\n"
+
+
+		catch ( constant exception& ex )
+
+			stdout << "Exception: << ex.whatMessage() << "\n"
+
+				
+		
+- **Q.** For Lab 3 are we only implementing linear probing, or do we implement quadratic probing and double hashing as well?
+
+- **A.**  You have to calculate collisions for all 3 probings and output them.
+So you have implement all 3 probings otherwise how you will know number of collisions?
+You have to print tables for all probings.
+
+
+- **Q.** I have one more question. What hash function are we using, is it, hash(x) % table size, or is it, (hash(key) = (key>>8)|((key&0xff)<<16))?
+
+- **A.** The first index is calculated as hash(x) % table size. For this Example hash(x) = x;
+Hash function for Lab3 is (hash(key) = (key>>8)|((key&0xff)<<16))
+I provided pdf file, you just need to do similar using different input files.
+
+class HashInterface< Key, Value > 
+
+   public
+
+	virtual Value* get( constant Key& key ) constant   	    	// returns null if not found
+	virtual void   put( constant Key& key, constant Value& value )
+	virtual int    getCollisions() constant
+	virtual        destructor()					// C++ only
+
+Your program has to take 4 input files as input and produce 8 output files.
+
+- user need to put some value in the table, but spot maybe occupied, so it is offered other spot (using probing), if this spot is also occupied, offered other spot, etc.
+
+- the way to find another spot is probing (in this case linear, quadratic, or double hashing),
+
+- hash function can be used to find next spot.
+
+- To find the stored value it needs to be complete the same way as was done to store the value.
+
+In Double hashing
+hash(key) calculates (key>>8)|((key&0xff)<<16)
+hashIndex(key) calculates hash(key)%table_.size()
+tableSize is (in our case constant 191)
+doubleFactor is (in our case constant 181)
+hash2(key) calculates doubleFactor_-( hash(key); % doubleFactor_)
+f(i,key) is i*hash2(key)
+in lookUp(key) startIndex = hashIndex(key)
+ index= startIndex;
+ i=0;
+loop 
+ if table[index] is empty
+ return index
+ else if on position table[index] is key, return index 
+ if not all above : collision; use double hashing
+ ++i; ++collisions;
+ index=(f(i, key)+startIndex)%table_.size();
+ 
+ if (index == startIndex)
+ return table_.size()+1
+end_loop
+
+. Student Question:
+I saw the new content guidelines and it said we cannot use associative arrays. Could we still use 
+regular arrays in java for our labs and exercises?
+-Yes
+Also, for exam 1, I was wondering how we would take it at Oakton. Where at Oakton do we go 
+to take the exam?
+- the Testing Center in Des Plaines or Skokie campus
+Also I saw that the exam is open book, but do we have to bring our own copy of the text?
+- you do not have to but can bring your textbook or use e-textbook on your laptop.
+Will the exam coding question be similar to the labs and exercises?
+- No, it is multiple choice quiz.
+2. Student Question
+For lab 3, if the key is supposed to be an integer for the hash method in the linear probing 
+pseudo-code, is the Key supposed to be a generic object such as Key key, or an int like int key?
+-If you are comfortable with it, write generic (template) classes. Otherwise just write classes that 
+work with int or Integer keys and values.
+-In Java you can create generic class using Key type. 
+In main() when you create object instead of Key use Integer 
+If it is Key key how do you return key(>>8) | ((key&0xff)<<16) seeing that it is bitwise 
+operation on integers. 
+- you can use key.longValue() to get value of this Integer as a long.
+Also for exercise 3, do we have to use a seed? if we are able to sort and print the data by just 
+using a new random would that be fine?
+- you can use seed or not use it, you can use default beginning value.
+Student hint:
+I had a difficult time with the double hashing implementation, until I tried using the output of the 
+first hash() function as the input to the second. 
+3. Student Question
+I noticed something interesting with the out150 file sample. Can you please confirm that we need 
+to use size of the hash table as 191? Because for the in150 file, for linear probing in random 
+order, the number 1675 mod 191 is 147, so when number 147 occurs in the file, it encounters 
+collision. However the out150_sample.txt has 0 collision for both 1675 and 147. Can you please 
+check?
+-There is no contradiction, because as startIndex you shall use index = hash(key) % table.size();
+not key%table.size(); 
+and hash(key) is (key>>8)|((key&0xff)<<16);
+
+
